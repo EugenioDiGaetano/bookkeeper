@@ -92,6 +92,23 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-tcnative-boringssl-static</artifactId>
     </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-buffer</artifactId>
+        <version>4.1.77.Final</version> <!-- Usa la versione compatibile con il tuo progetto -->
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-common</artifactId>
+        <version>4.1.77.Final</version> <!-- Usa la versione compatibile con il tuo progetto -->
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport</artifactId>
+        <version>4.1.77.Final</version> <!-- Usa la versione compatibile con il tuo progetto -->
+      </dependency>
+
     <dependency>
       <groupId>org.apache.bookkeeper.http</groupId>
       <artifactId>http-server</artifactId>
@@ -223,6 +240,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>3.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.bookkeeper.http</groupId>
       <artifactId>vertx-http-server</artifactId>
       <version>${project.parent.version}</version>
@@ -231,6 +254,16 @@
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -316,6 +349,23 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.4.2</version>
+        <configuration>
+          <verbose>false</verbose>
+          <threads>8</threads>
+          <targetClasses>
+            <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
+            <!--param>org.apache.bookkeeper.discover.Cookie</param-->
+          </targetClasses>
+          <targetTests>
+            <!--param>org.apache.bookkeeper.cookie.*</param-->
+            <param>org.apache.bookkeeper.buff</param>
+          </targetTests>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <profiles>
@@ -373,5 +423,60 @@
         </plugins>
       </build>
     </profile>
+  <profile>
+    <!--      Profilo per la creazione del report di ba-dua-->
+    <id>badua</id>
+    <activation>
+      <activeByDefault>false</activeByDefault>
+    </activation>
+    <properties>
+      <ba-dua.version>0.6.0</ba-dua.version>
+    </properties>
+
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+            <forkCount>${forkCount.variable}</forkCount>
+            <reuseForks>false</reuseForks>
+            <trimStackTrace>false</trimStackTrace>
+            <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
+            <rerunFailingTestsCount>${testRetryCount}</rerunFailingTestsCount>
+            <argLine>
+              @{argLine} -javaagent:${project.basedir}/badua-lib/ba-dua-agent-rt-0.6.0-all.jar
+              -Xbootclasspath/p:${project.basedir}/badua-lib/ba-dua-agent-rt-0.6.0-all.jar
+            </argLine>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>3.0.0</version>
+          <executions>
+            <execution>
+              <id>run-script</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>exec</goal>
+              </goals>
+              <configuration>
+                <executable>/bin/bash</executable>
+                <arguments>
+                  <argument>${project.basedir}/badua-lib/createXml.sh</argument>
+                  <argument>${project.basedir}</argument>
+                </arguments>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
   </profiles>
+
 </project>
