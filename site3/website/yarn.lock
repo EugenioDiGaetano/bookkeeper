@@ -28,7 +28,7 @@
   dependencies:
     "@algolia/cache-common" "4.12.2"
 
-"@algolia/cache-browser-local-storage@4.17.0":
+"@algolia/cache-browser-local-storage@4.18.0":
   version "4.17.0"
   resolved "https://registry.yarnpkg.com/@algolia/cache-browser-local-storage/-/cache-browser-local-storage-4.17.0.tgz#4c54a9b1795dcc1cd9f9533144f7df3057984d39"
   integrity sha512-myRSRZDIMYB8uCkO+lb40YKiYHi0fjpWRtJpR/dgkaiBlSD0plRyB6lLOh1XIfmMcSeBOqDE7y9m8xZMrXYfyQ==
@@ -3445,9 +3445,9 @@ algoliasearch@^4.13.1:
     "@algolia/logger-common" "4.17.0"
     "@algolia/logger-console" "4.17.0"
     "@algolia/requester-browser-xhr" "4.17.0"
-    "@algolia/requester-common" "4.17.0"
-    "@algolia/requester-node-http" "4.17.0"
-    "@algolia/transporter" "4.17.0"
+    "@algolia/requester-common" "4.18.0"
+    "@algolia/requester-node-http" "4.18.0"
+    "@algolia/transporter" "4.18.0"
 
 ansi-align@^3.0.0, ansi-align@^3.0.1:
   version "3.0.1"
