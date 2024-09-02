@@ -1,4 +1,4 @@
-name: jacoco
+name: pit
 on:
   push:
     branches:
@@ -34,10 +34,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn clean verify -P jacoco
+        run: mvn clean verify -P pit
 
-      - name: Save JaCoCo report
+      - name: Save report
         uses: actions/upload-artifact@v3
         with:
-          name: jacocoReport
-          path: report-collector/target/site/jacoco-aggregate/
+          name: Report
+          path: bookkeeper-server/target/pit-reports/
+          if-no-files-found: error
