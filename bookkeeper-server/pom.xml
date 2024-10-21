@@ -399,11 +399,12 @@
             </dependencies>
             <configuration>
               <targetClasses>
-                <param>org.apache.bookkeeper.bookie.storage.ldb.WriteCache</param>
+                <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
               </targetClasses>
               <targetTests>
-                <param>org.apache.bookkeeper.bookie.storage.ldb.WriteCachePutTest</param>
-                <param>org.apache.bookkeeper.bookie.storage.ldb.WriteCacheGetTest</param>
+                <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
+                <param>org.apache.bookkeeper.bookie.BufferedChannelWriteTest</param>
+                <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
               </targetTests>
               <avoidCallsTo>
                 <avoidCallsTo>org.slf4j</avoidCallsTo>
