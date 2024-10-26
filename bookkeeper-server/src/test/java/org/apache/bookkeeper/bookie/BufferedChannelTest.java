@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,7 +56,6 @@ public class BufferedChannelTest {
         this.exceptionOutputTest = exceptionOutputTest;
     }
 
-
     @Parameterized.Parameters
     public static Collection<Object[]> data() throws IOException {
         return Arrays.asList(new Object[][]{
@@ -66,6 +66,8 @@ public class BufferedChannelTest {
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           -1,             0,           1,                     IllegalArgumentException.class},
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           0,              -1,          0,                     IllegalArgumentException.class},
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           1,              1,           1,                     null},
+                // Add for kill pit mutation
+                {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           1,              1,           0,                     null},
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           1,              1,           -1,                    null},
                 {AllocatorStatus.INVALID,           FileChannelStaus.DEFAULT,           0,              0,           -1,                    NullPointerException.class},
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.INVALID,           1,              1,           1,                     java.nio.file.AccessDeniedException.class},
@@ -91,6 +93,13 @@ public class BufferedChannelTest {
             try {
                 bufferedChannelTest = spy(new BufferedChannel(allocatorTest, fileChannelTest, writeCapacityTest, readCapacityTest, unpersistedBytesBoundTest));
                 Assert.assertNotNull(bufferedChannelTest);
+                // Add for kill pit mutation
+                Assert.assertEquals(fileChannelTest.position(), bufferedChannelTest.writeBufferStartPosition.get());
+                // Use Reflection for access `doRegularFlushes`
+                Field doRegularFlushesField = BufferedChannel.class.getDeclaredField("doRegularFlushes");
+                doRegularFlushesField.setAccessible(true); // Rendi accessibile il campo privato
+                boolean doRegularFlushesValue = (boolean) doRegularFlushesField.get(bufferedChannelTest);
+                Assert.assertEquals(unpersistedBytesBoundTest > 0, doRegularFlushesValue);
             } catch (Exception e) {
                 Assert.assertEquals(exceptionOutputTest, e.getClass());
             }
@@ -102,6 +111,7 @@ public class BufferedChannelTest {
         switch (status) {
             case DEFAULT:
                 fileChannelTest = FileChannel.open(PATH_FC);
+                fileChannelTest.position(5);
                 break;
             case CLOSE:
                 fileChannelTest = FileChannel.open(PATH_FC);
