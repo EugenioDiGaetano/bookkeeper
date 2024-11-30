@@ -93,11 +93,10 @@ public class BufferedChannelTest {
             try {
                 bufferedChannelTest = spy(new BufferedChannel(allocatorTest, fileChannelTest, writeCapacityTest, readCapacityTest, unpersistedBytesBoundTest));
                 Assert.assertNotNull(bufferedChannelTest);
-                // Add for kill pit mutation
+                // Aggiunta per killare i mutanti
                 Assert.assertEquals(fileChannelTest.position(), bufferedChannelTest.writeBufferStartPosition.get());
-                // Use Reflection for access `doRegularFlushes`
                 Field doRegularFlushesField = BufferedChannel.class.getDeclaredField("doRegularFlushes");
-                doRegularFlushesField.setAccessible(true); // Rendi accessibile il campo privato
+                doRegularFlushesField.setAccessible(true);
                 boolean doRegularFlushesValue = (boolean) doRegularFlushesField.get(bufferedChannelTest);
                 Assert.assertEquals(unpersistedBytesBoundTest > 0, doRegularFlushesValue);
             } catch (Exception e) {

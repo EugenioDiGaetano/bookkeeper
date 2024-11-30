@@ -6,6 +6,7 @@ public enum ByteBufStatus {
     FULL,
     NULL,
     ONLY_READ,
+    LITTLE,
     CLOSE,
     MORE
 }
