@@ -400,11 +400,13 @@
             <configuration>
               <targetClasses>
                 <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
+                <param>org.apache.bookkeeper.bookie.BookieImpl</param>
               </targetClasses>
               <targetTests>
                 <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
                 <param>org.apache.bookkeeper.bookie.BufferedChannelWriteTest</param>
                 <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
+                <param>org.apache.bookkeeper.bookie.BookieImplgetAddressTest</param>
               </targetTests>
               <avoidCallsTo>
                 <avoidCallsTo>org.slf4j</avoidCallsTo>
