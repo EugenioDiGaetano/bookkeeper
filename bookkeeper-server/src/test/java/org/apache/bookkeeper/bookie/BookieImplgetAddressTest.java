@@ -67,8 +67,6 @@ public class BookieImplgetAddressTest {
     @Before
     public void setup() {
         try {
-            if(advertisedAddressTest==null){
-            }
             setupServer(advertisedAddressTest, portTest, listeningInterfaceTest, useHostNameAsBookieIdTest, useShortHostNameTest, allowLoopbackTest);
         } catch (IOException e) {
             exceptionTest = e.getClass();
@@ -78,11 +76,16 @@ public class BookieImplgetAddressTest {
     private void setupServer(String advertisedAddressTest, int portTest, String listeningInterfaceTest, boolean useHostNameAsBookieIdTest, boolean useShortHostNameTest, boolean allowLoopbackTest) throws IOException{
         confTest = new ServerConfiguration();
         confTest.setBookiePort(portTest);
-        confTest.setAdvertisedAddress(advertisedAddressTest);
         confTest.setListeningInterface(listeningInterfaceTest);
         confTest.setUseHostNameAsBookieID(useHostNameAsBookieIdTest);
         confTest.setUseShortHostName(useShortHostNameTest);
         confTest.setAllowLoopback(allowLoopbackTest);
+        if (advertisedAddressTest=="null"){
+            confTest.setAdvertisedAddress(null);
+        }
+        else {
+            confTest.setAdvertisedAddress(advertisedAddressTest);
+        }
     }
 
     @Test
