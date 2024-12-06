@@ -8,5 +8,6 @@ public enum ByteBufStatus {
     ONLY_READ,
     LITTLE,
     CLOSE,
-    MORE
+    MORE,
+    INVALID
 }

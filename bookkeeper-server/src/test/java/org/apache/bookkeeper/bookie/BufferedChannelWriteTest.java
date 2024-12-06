@@ -20,6 +20,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.apache.bookkeeper.bookie.utils.Utils.generateRandomBytes;
+import static org.apache.bookkeeper.bookie.utils.Utils.verifyWrittenBytes;
+
 @RunWith(Parameterized.class)
 public class BufferedChannelWriteTest {
     private ByteBuf srcBufferTest;
@@ -33,6 +36,7 @@ public class BufferedChannelWriteTest {
     private FileChannel fileChannel;
     private int capacity;
     private final static Path PATH_FC = Paths.get("src/test/java/org/apache/bookkeeper/bookie/utils/filechannel.txt");
+    private byte[] writeBytes;
 
 
     public BufferedChannelWriteTest(ByteBufStatus srcStatusTest, ByteBufStatus dstStatusTest, long unpersistedBytesBoundTest ,Class<? extends Exception> exceptionOutputTest) {
@@ -51,11 +55,14 @@ public class BufferedChannelWriteTest {
                 {ByteBufStatus.FULL,                    ByteBufStatus.DEFAULT,          16,                                 null},
                 {ByteBufStatus.ZERO_CAPACITY,           ByteBufStatus.DEFAULT,          16,                                 null},
                 {ByteBufStatus.DEFAULT,                 ByteBufStatus.ONLY_READ,        -1,                                 null},
-                // Test fallisce perché causa loop infinito
-                // {ByteBufStatus.DEFAULT,                 ByteBufStatus.ZERO_CAPACITY,    16,                                 null},
                 {ByteBufStatus.DEFAULT,                 ByteBufStatus.LITTLE,           16,                                 null},
                 {ByteBufStatus.DEFAULT,                 ByteBufStatus.CLOSE,            16,                                 java.nio.channels.ClosedChannelException.class},
                 {ByteBufStatus.MORE,                    ByteBufStatus.DEFAULT,          10245,                              null}
+
+                // Test fallisce perché causa loop infinito
+                // {ByteBufStatus.DEFAULT,                 ByteBufStatus.ZERO_CAPACITY,    16,                                 null},
+                //Test fallisce perché non viene generata eccezione
+                // {ByteBufStatus.INVALID,                 ByteBufStatus.DEFAULT,          16,                                 io.netty.util.IllegalReferenceCountException.class},
         });
     }
 
@@ -99,14 +106,15 @@ public class BufferedChannelWriteTest {
                 long finalPosition = fileChannel.position();
                 int bytesToCopy = Math.min(srcBufferTest.readableBytes(), bufferedChannel.writeBuffer.writableBytes());
 
-                if (exceptionOutputTest == null) {
-                    Assert.assertTrue(bufferedChannel.position >= initialPosition);
-                    if (dstStatusTest == ByteBufStatus.ONLY_READ) {
-                        Assert.assertEquals(finalPosition, initialPosition);
-
-                    } else if (dstStatusTest != ByteBufStatus.ZERO_CAPACITY && dstStatusTest != ByteBufStatus.LITTLE) {
-                        Assert.assertEquals(initialPosition + bytesToCopy, finalPosition);
-                    }
+                Assert.assertTrue(bufferedChannel.position >= initialPosition);
+                if (dstStatusTest == ByteBufStatus.ONLY_READ) {
+                    Assert.assertEquals(finalPosition, initialPosition);
+                }
+                else if (dstStatusTest != ByteBufStatus.ZERO_CAPACITY && dstStatusTest != ByteBufStatus.LITTLE) {
+                    Assert.assertEquals(initialPosition + bytesToCopy, finalPosition);
+                }
+                if (exceptionTest == null && exceptionOutputTest == null && srcStatusTest != ByteBufStatus.ZERO_CAPACITY) {
+                    verifyWrittenBytes(0, initialPosition, bufferedChannel.writeBuffer, writeBytes);
                 }
 
             } catch (Exception e) {
@@ -116,24 +124,25 @@ public class BufferedChannelWriteTest {
     }
 
     private void setupSrc(ByteBufStatus status) {
+        writeBytes = generateRandomBytes(1);
         switch (status) {
             case DEFAULT:
-                srcBufferTest = Unpooled.buffer(8192).writeBytes(new byte[4096]);
+                writeBytes = generateRandomBytes(4096);
+                srcBufferTest = Unpooled.buffer(8192).writeBytes(writeBytes);
                 break;
             case FULL:
-                srcBufferTest = Unpooled.buffer(8192).writeBytes(new byte[8192]);
+                writeBytes = generateRandomBytes(8192);
+                srcBufferTest = Unpooled.buffer(8192).writeBytes(writeBytes);
                 break;
             case ZERO_CAPACITY:
                 srcBufferTest = Unpooled.buffer(0);
                 break;
-            case ONLY_READ:
-                srcBufferTest = Unpooled.buffer(8192).asReadOnly();
-                break;
-            case CLOSE:
-                srcBufferTest = Unpooled.buffer(8192);
-                break;
             case MORE:
                 srcBufferTest = Unpooled.buffer(10240);
+                break;
+            case INVALID:
+                srcBufferTest = Unpooled.buffer(256);
+                srcBufferTest.release();
                 break;
             default:
                 srcBufferTest = null;

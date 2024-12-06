@@ -12,11 +12,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,10 +95,14 @@ public class BufferedChannelTest {
                 Assert.assertNotNull(bufferedChannelTest);
                 // Aggiunta per killare i mutanti
                 Assert.assertEquals(fileChannelTest.position(), bufferedChannelTest.writeBufferStartPosition.get());
-                Field doRegularFlushesField = BufferedChannel.class.getDeclaredField("doRegularFlushes");
-                doRegularFlushesField.setAccessible(true);
-                boolean doRegularFlushesValue = (boolean) doRegularFlushesField.get(bufferedChannelTest);
-                Assert.assertEquals(unpersistedBytesBoundTest > 0, doRegularFlushesValue);
+                if (unpersistedBytesBoundTest > 0 && exceptionOutputTest == null) {
+                    bufferedChannelTest.flushAndForceWriteIfRegularFlush(true);
+                    verify(bufferedChannelTest, times(1)).flushAndForceWrite(true);
+                }
+                else if (unpersistedBytesBoundTest <= 0 && exceptionOutputTest == null) {
+                    bufferedChannelTest.flushAndForceWriteIfRegularFlush(true);
+                    verify(bufferedChannelTest, never()).flushAndForceWrite(anyBoolean());
+                }
             } catch (Exception e) {
                 Assert.assertEquals(exceptionOutputTest, e.getClass());
             }
@@ -109,7 +113,7 @@ public class BufferedChannelTest {
     private void setupFileChannel(FileChannelStaus status) throws IOException {
         switch (status) {
             case DEFAULT:
-                fileChannelTest = FileChannel.open(PATH_FC);
+                fileChannelTest = FileChannel.open(PATH_FC, StandardOpenOption.WRITE);
                 fileChannelTest.position(5);
                 break;
             case CLOSE:
