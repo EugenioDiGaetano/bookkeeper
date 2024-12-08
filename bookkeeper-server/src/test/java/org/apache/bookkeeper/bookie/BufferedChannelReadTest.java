@@ -75,7 +75,7 @@ public class BufferedChannelReadTest {
                 {ByteBufStatus.DEFAULT,                 2049,                 1,             BufferedInit.BUFFERED_CHANNEL,                             java.lang.IllegalArgumentException.class},
                 {ByteBufStatus.DEFAULT,                 0,                    1,             BufferedInit.BUFFERED_CHANNEL,                             null},
                 {ByteBufStatus.INVALID,                 5,                    24,            BufferedInit.BUFFERED_READ_CHANNEL,                        io.netty.util.IllegalReferenceCountException.class},
-                //Added after
+                //Aggiunti dopo
                 {ByteBufStatus.DEFAULT,                 2049,                 1,             BufferedInit.NULL,                                         null},
                 {ByteBufStatus.DEFAULT,                 0,                    100,           BufferedInit.NULL,                                         null},
                 {ByteBufStatus.DEFAULT,                 2,                    24,            BufferedInit.BUFFERED_CHANNEL,                             null},

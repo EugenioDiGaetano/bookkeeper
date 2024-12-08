@@ -2,11 +2,13 @@ package org.apache.bookkeeper.bookie;
 
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
+import org.apache.bookkeeper.net.DNS;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.MockedStatic;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -15,9 +17,8 @@ import java.util.Collection;
 
 import static org.mockito.Mockito.*;
 
-
 @RunWith(Parameterized.class)
-public class BookieImplgetAddressTest {
+public class BookieImplGetAddressTest {
     private static final int DEFAULT_PORT = 3181;
     private BookieSocketAddress bookieImplTest;
     private ServerConfiguration confTest;
@@ -30,7 +31,7 @@ public class BookieImplgetAddressTest {
     private Class<? extends Exception> exceptionOutputTest;
     private Class<? extends Exception> exceptionTest;
 
-    public BookieImplgetAddressTest(
+    public BookieImplGetAddressTest(
             String advertisedAddressTest,
             String listeningInterfaceTest,
             int portTest,
@@ -62,7 +63,10 @@ public class BookieImplgetAddressTest {
                 {"",                "default",      65534,                true,                  true,          true,           null},
                 {"",                "default",      65536,                false,                 true,          false,          IllegalArgumentException.class},
                 {"",                "default",      Integer.MIN_VALUE,    true,                  false,         true,           null},
-                {"",                "default",      1,                    true,                  true,          false,          java.net.UnknownHostException.class}
+                {"",                "default",      1,                    true,                  true,          false,          java.net.UnknownHostException.class},
+                // Aggiunti dopo
+                {"",                "invalid",      1,                    false,                 false,         true,           java.net.UnknownHostException.class},
+                {"",                "null",         1,                    false,                 false,         true,           null},
         });
     }
 
@@ -84,14 +88,12 @@ public class BookieImplgetAddressTest {
         if (portTest!=-Integer.MIN_VALUE){
             confTest.setBookiePort(portTest);
         }
-
         if (advertisedAddressTest=="null"){
             confTest.setAdvertisedAddress(null);
         }
         else {
             confTest.setAdvertisedAddress(advertisedAddressTest);
         }
-
         if (listeningInterfaceTest=="null"){
             confTest.setListeningInterface(null);
         }
@@ -102,6 +104,20 @@ public class BookieImplgetAddressTest {
 
     @Test
     public void test() {
+        if (listeningInterfaceTest == "invalid"){
+            try (MockedStatic<DNS> mockedStatic = mockStatic(DNS.class)) {
+                {
+                    mockedStatic.when(() -> DNS.getDefaultHost("invalid")).thenReturn("nonexistent_host");
+                    singleTest();
+                }
+            }
+        }
+        else{
+            singleTest();
+        }
+    }
+
+    public void singleTest() {
         if (exceptionTest != null){
             Assert.assertEquals(exceptionOutputTest, exceptionTest);
         }
@@ -114,16 +130,13 @@ public class BookieImplgetAddressTest {
                     Assert.assertEquals("Porta di default attesa: " + DEFAULT_PORT, DEFAULT_PORT, bookieImplTest.getPort());
                 }
                 if (advertisedAddressTest != "" && advertisedAddressTest != "null") {
-                    // Se l'indirizzo pubblicizzato non è "null", vuoto o "null" come stringa, verifica che corrisponda
                     Assert.assertEquals("Indirizzo pubblicizzato atteso: " + advertisedAddressTest, advertisedAddressTest, bookieImplTest.getHostName());
                 } else if (useHostNameAsBookieIdTest) {
-                    // Se si usa l'hostname come ID Bookie, verifica l'indirizzo dell'host
                     String hostName = useShortHostNameTest ?
                             InetAddress.getLocalHost().getCanonicalHostName().split("\\.", 2)[0] :
                             InetAddress.getLocalHost().getCanonicalHostName();
                     Assert.assertEquals("Nome host atteso (usando hostname come ID Bookie): " + hostName, hostName, bookieImplTest.getHostName());
                 } else {
-                    // Altrimenti, se l'indirizzo è "null" o vuoto, verifica l'indirizzo IP locale
                     String expectedHost = (advertisedAddressTest == "null" || advertisedAddressTest == "") ?
                             InetAddress.getLocalHost().getHostAddress() : advertisedAddressTest;
                     Assert.assertEquals("Nome host atteso (indirizzo pubblicizzato nullo o vuoto): " + expectedHost, expectedHost, bookieImplTest.getHostName());
@@ -133,5 +146,4 @@ public class BookieImplgetAddressTest {
             }
         }
     }
-
 }

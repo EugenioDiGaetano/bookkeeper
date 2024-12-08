@@ -69,7 +69,7 @@ public class BufferedChannelTest {
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           1,              1,           -1,                    null},
                 {AllocatorStatus.INVALID,           FileChannelStaus.DEFAULT,           0,              0,           -1,                    NullPointerException.class},
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.INVALID,           1,              1,           1,                     java.nio.file.AccessDeniedException.class},
-                // Add for kill pit mutation
+                //Aggiunto dopo
                 {AllocatorStatus.DEFAULT,           FileChannelStaus.DEFAULT,           1,              1,           0,                     null},
         });
     }
