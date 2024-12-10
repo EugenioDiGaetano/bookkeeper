@@ -51,22 +51,23 @@ public class BookieImplGetAddressTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][]{                            //UseHostNameAs          UseShort       Allow
-                // Address          Interface       Port                  BookieIdTest           HostName       Loopback        ExpectedException
-                {"null",            "default",      0,                    false,                 false,         true,           null},
-                {"",                "not_valid",    0,                    true,                  false,         false,          java.net.UnknownHostException.class},
-                {"192.168.1.100",   "null",         1,                    true,                  true,          false,          null},
-                {"host1",           "",             0,                    false,                 true,          true,           IOException.class},
-                {"300.300.300.3",   "default",      0,                    true,                  false,         false,          IOException.class},
-                {"",                "default",      -1,                   false,                 false,         false,          IllegalArgumentException.class},
-                {"",                "default",      65535,                false,                 false,         true,           null},
-                {"",                "default",      65534,                true,                  true,          true,           null},
-                {"",                "default",      65536,                false,                 true,          false,          IllegalArgumentException.class},
-                {"",                "default",      Integer.MIN_VALUE,    true,                  false,         true,           null},
-                {"",                "default",      1,                    true,                  true,          false,          java.net.UnknownHostException.class},
+        return Arrays.asList(new Object[][]{                                //UseHostNameAs          UseShort       Allow
+                // Address          Interface           Port                  BookieIdTest           HostName       Loopback        ExpectedException
+                {"null",            "default",          0,                    false,                 false,         true,           null},
+                {"",                "not_valid",        0,                    true,                  false,         false,          java.net.UnknownHostException.class},
+                {"192.168.1.100",   "null",             1,                    true,                  true,          false,          null},
+                {"host1",           "",                 0,                    false,                 true,          true,           IOException.class},
+                {"300.300.300.3",   "default",          0,                    true,                  false,         false,          IOException.class},
+                {"",                "default",          -1,                   false,                 false,         false,          IllegalArgumentException.class},
+                {"",                "default",          65535,                false,                 false,         true,           null},
+                {"",                "default",          65534,                true,                  true,          true,           null},
+                {"",                "default",          65536,                false,                 true,          false,          IllegalArgumentException.class},
+                {"",                "default",          Integer.MIN_VALUE,    true,                  false,         true,           null},
+                {"",                "default",          1,                    true,                  true,          false,          java.net.UnknownHostException.class},
                 // Aggiunti dopo
-                {"",                "invalid",      1,                    false,                 false,         true,           java.net.UnknownHostException.class},
-                {"",                "null",         1,                    false,                 false,         true,           null},
+                {"",                "invalid",          1,                    false,                 false,         true,           java.net.UnknownHostException.class},
+                {"",                "null",             1,                    false,                 false,         true,           null},
+                {"",                "null_invalid",     1,                    false,                 false,         true,           java.net.UnknownHostException.class}
         });
     }
 
@@ -94,7 +95,7 @@ public class BookieImplGetAddressTest {
         else {
             confTest.setAdvertisedAddress(advertisedAddressTest);
         }
-        if (listeningInterfaceTest=="null"){
+        if (listeningInterfaceTest=="null" || listeningInterfaceTest=="null_invalid"){
             confTest.setListeningInterface(null);
         }
         else {
@@ -104,10 +105,11 @@ public class BookieImplGetAddressTest {
 
     @Test
     public void test() {
-        if (listeningInterfaceTest == "invalid"){
+        if (listeningInterfaceTest == "invalid" || listeningInterfaceTest == "null_invalid"){
             try (MockedStatic<DNS> mockedStatic = mockStatic(DNS.class)) {
                 {
                     mockedStatic.when(() -> DNS.getDefaultHost("invalid")).thenReturn("nonexistent_host");
+                    mockedStatic.when(() -> DNS.getDefaultHost("default")).thenReturn("nonexistent_host");
                     singleTest();
                 }
             }

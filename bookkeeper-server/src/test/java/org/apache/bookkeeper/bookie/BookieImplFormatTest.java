@@ -11,13 +11,13 @@ import org.mockito.MockedStatic;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class BookieImplFormatTest {
@@ -28,6 +28,7 @@ public class BookieImplFormatTest {
     private final DirStatus metadataDirTest;
     private final boolean isInteractive;
     private final boolean force;
+    private final boolean validPrompt;
     private final boolean expectedOutput;
 
     private ServerConfiguration configuration;
@@ -35,43 +36,58 @@ public class BookieImplFormatTest {
     MockedStatic<IOUtils> mockedStatic;
 
     public BookieImplFormatTest(DirStatus journalDirTest, DirStatus ledgerDirTest, DirStatus indexDirTest,
-                                DirStatus metadataDirTest, boolean isInteractive, boolean force, boolean expectedOutput) {
+                                DirStatus metadataDirTest, boolean isInteractive, boolean force, boolean validPrompt,boolean expectedOutput) {
         this.journalDirTest = journalDirTest;
         this.ledgerDirTest = ledgerDirTest;
         this.indexDirTest = indexDirTest;
         this.metadataDirTest = metadataDirTest;
         this.isInteractive = isInteractive;
         this.force = force;
+        this.validPrompt = validPrompt;
         this.expectedOutput = expectedOutput;
     }
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                // journalDir               ledgerDir                   indexDir                 metadataDir            isInteractive           force       Output
-                {DirStatus.INVALID,         DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   false,      false},
-                {DirStatus.VALID,           DirStatus.INVALID,          DirStatus.VALID,         DirStatus.VALID,       false,                  false,      false},
-                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.INVALID,       DirStatus.VALID,       false,                  true,       false},
-                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.INVALID,     false,                  true,       false},
-                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       false,                  true,       true},
-                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       false,                  false,      false},
-                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   true,       true},
-                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   false,      true},
-                {DirStatus.MISSING,         DirStatus.MISSING,          DirStatus.MISSING,       DirStatus.MISSING,     true,                   true,       true},
-                {DirStatus.EMPTY,           DirStatus.EMPTY,            DirStatus.EMPTY,         DirStatus.EMPTY,       true,                   true,       true},
-                {DirStatus.NULL,            DirStatus.NULL,             DirStatus.NULL,          DirStatus.NULL,        true,                   true,       true}
+                // journalDir               ledgerDir                   indexDir                 metadataDir            isInteractive           force       userValidPrompt         Output
+                {DirStatus.INVALID,         DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   false,      true,                   false},
+                {DirStatus.VALID,           DirStatus.INVALID,          DirStatus.VALID,         DirStatus.VALID,       false,                  false,      true,                   false},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.INVALID,       DirStatus.VALID,       false,                  true,       true,                   false},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.INVALID,     false,                  true,       true,                   false},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       false,                  true,       true,                   true},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       false,                  false,      true,                   false},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   true,       true,                   true},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   false,      true,                   true},
+                {DirStatus.MISSING,         DirStatus.MISSING,          DirStatus.MISSING,       DirStatus.MISSING,     true,                   true,       true,                   true},
+                {DirStatus.EMPTY,           DirStatus.EMPTY,            DirStatus.EMPTY,         DirStatus.EMPTY,       true,                   true,       true,                   true},
+                {DirStatus.NULL,            DirStatus.NULL,             DirStatus.NULL,          DirStatus.NULL,        true,                   true,       true,                   true},
+                //Aggiunti dopo,
+                {DirStatus.FILE,            DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   false,      true,                   true},
+                {DirStatus.VALID,           DirStatus.FILE,             DirStatus.VALID,         DirStatus.VALID,       false,                  false,      true,                   false},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.FILE,          DirStatus.VALID,       false,                  true,       true,                   true},
+                {DirStatus.VALID,           DirStatus.INVALID,          DirStatus.VALID,         DirStatus.VALID,       false,                  true,       true,                   false},
+                {DirStatus.VALID,           DirStatus.VALID,            DirStatus.VALID,         DirStatus.VALID,       true,                   false,      false,                  false},
+                //Aggiunto per eliminare mutazione
+                {DirStatus.VALID,           DirStatus.EMPTY,            DirStatus.EMPTY,         DirStatus.EMPTY,       false,                  false,      true,                   false}
         });
     }
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         configuration = new ServerConfiguration();
         setupDirectories(journalDirTest, dirs -> {configuration.setJournalDirsName(dirs);});
         setupDirectories(ledgerDirTest, dirs -> {configuration.setLedgerDirNames(dirs);});
         setupDirectories(indexDirTest, dirs -> {configuration.setIndexDirName(dirs);});
         configuration.setGcEntryLogMetadataCachePath(setupDirectory(metadataDirTest));
-        mockedStatic = mockStatic(IOUtils.class);
-        mockedStatic.when(() -> IOUtils.confirmPrompt(anyString())).thenReturn(true);
+        if (validPrompt) {
+            mockedStatic = mockStatic(IOUtils.class);
+            mockedStatic.when(() -> IOUtils.confirmPrompt(anyString())).thenReturn(true);
+        } else {
+            InputStream mockInputStream = mock(InputStream.class);
+            when(mockInputStream.read()).thenThrow(new IOException("Simulated IOException"));
+            System.setIn(mockInputStream);
+        }
     }
 
     @Test
@@ -84,7 +100,7 @@ public class BookieImplFormatTest {
     private boolean validateDirectories(boolean methodOutput, List<File> directories) {
         if (methodOutput) {
             for (File dir : directories) {
-                if (dir.exists() && dir.isDirectory() && dir.list().length > 0) {
+                if (dir.exists() && !dir.isDirectory() && dir.list().length > 0) {
                     return false;
                 }
             }
@@ -107,7 +123,10 @@ public class BookieImplFormatTest {
                 deleteRecursively(dir);
             }
         }
-        mockedStatic.close();
+        if (mockedStatic != null) {
+            mockedStatic.close();
+        }
+        System.setIn(System.in);
     }
 
     private String setupDirectory(DirStatus status) {
@@ -147,6 +166,18 @@ public class BookieImplFormatTest {
                 }
                 dirPath = invalidDir.getAbsolutePath();
                 break;
+            case FILE:
+                File fileDir = new File(System.getProperty("java.io.tmpdir"), "file_" + System.nanoTime());
+                fileDir.mkdirs();
+                tempDirs.add(fileDir);
+                try {
+                    File file = new File(fileDir, "fileDir.log");
+                    file.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                dirPath = fileDir.getAbsolutePath()+"/fileDir.log";
+                break;
             default:
                 dirPath = null;
                 break;
@@ -163,10 +194,16 @@ public class BookieImplFormatTest {
                 dirPaths[2] = setupDirectory(DirStatus.EMPTY);
                 break;
             case INVALID:
-                dirPaths[2] = setupDirectory(DirStatus.EMPTY);
-                dirPaths[1] = setupDirectory(DirStatus.MISSING);
                 dirPaths[0] = setupDirectory(DirStatus.VALID);
+                dirPaths[1] = setupDirectory(DirStatus.MISSING);
+                dirPaths[2] = setupDirectory(DirStatus.EMPTY);
                 dirPaths[3] = setupDirectory(DirStatus.INVALID);
+                break;
+            case FILE:
+                dirPaths[0] = setupDirectory(DirStatus.VALID);
+                dirPaths[1] = setupDirectory(DirStatus.MISSING);
+                dirPaths[2] = setupDirectory(DirStatus.EMPTY);
+                dirPaths[3] = setupDirectory(DirStatus.FILE);
                 break;
             default:
                 dirPaths = new String[0];

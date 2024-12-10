@@ -5,5 +5,6 @@ public enum DirStatus {
     INVALID,
     VALID,
     EMPTY,
-    MISSING
+    MISSING,
+    FILE
 }

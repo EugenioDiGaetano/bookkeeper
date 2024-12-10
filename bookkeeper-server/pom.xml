@@ -408,6 +408,7 @@
                 <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
                 <param>org.apache.bookkeeper.bookie.BookieImplGetAddressTest</param>
                 <param>org.apache.bookkeeper.bookie.BookieImplFormatTest</param>
+                <param>org.apache.bookkeeper.bookie.BookieImplMockTest</param>
               </targetTests>
               <avoidCallsTo>
                 <avoidCallsTo>org.slf4j</avoidCallsTo>
