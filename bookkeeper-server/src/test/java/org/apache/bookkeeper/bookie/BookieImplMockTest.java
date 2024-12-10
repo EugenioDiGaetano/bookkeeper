@@ -6,9 +6,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.UnknownHostException;
-import lombok.var;
 
 import static org.mockito.Mockito.*;
+import org.mockito.MockedConstruction;
 
 public class BookieImplMockTest {
     private BookieSocketAddress bookieImplTest;
@@ -20,7 +20,7 @@ public class BookieImplMockTest {
     public void testMockConstructionNoLook() {
         BookieSocketAddress myAdd = new BookieSocketAddress(hostName, portTest);
 
-        try (var mocked = mockConstruction(BookieSocketAddress.class, (mock, context) -> {
+        try (MockedConstruction<BookieSocketAddress> mocked = mockConstruction(BookieSocketAddress.class, (mock, context) -> {
             when(mock.getSocketAddress()).thenReturn(myAdd.getSocketAddress());
             when(mock.getPort()).thenReturn(myAdd.getPort());
         })) {
