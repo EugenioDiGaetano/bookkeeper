@@ -7,19 +7,16 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   build:
-    name: Build and analyze
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - name: Set up JDK 1.8
         uses: actions/setup-java@v3
         with:
           java-version: 8.0.372
           distribution: 'adopt'
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -31,12 +28,12 @@ jobs:
           git checkout d2401f0
           mvn clean install
           cd ..
-      - name: Build and analyze
+      - name: Build and analyze with Ba-Dua
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mvn clean verify -P badua
 
-      - name: Upload report
+      - name: Upload Ba-Dua report
         uses: actions/upload-artifact@v3
         with:
           name: BaDuaReport
