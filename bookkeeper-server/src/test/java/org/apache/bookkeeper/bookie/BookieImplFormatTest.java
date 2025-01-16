@@ -2,9 +2,13 @@ package org.apache.bookkeeper.bookie;
 
 
 import org.apache.bookkeeper.bookie.utils.DirStatus;
+import org.apache.bookkeeper.bookie.utils.Utils;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.util.IOUtils;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.MockedStatic;
@@ -120,7 +124,7 @@ public class BookieImplFormatTest {
         for (File dir : tempDirs) {
             if (dir != null && dir.exists()) {
                 dir.setWritable(true);
-                deleteRecursively(dir);
+                Utils.deleteRecursively(dir);
             }
         }
         if (mockedStatic != null) {
@@ -210,18 +214,6 @@ public class BookieImplFormatTest {
                 break;
         }
         setter.setDirectories(dirPaths);
-    }
-
-    private void deleteRecursively(File file) {
-        if (file == null || !file.exists()) {
-            return;
-        }
-        if (file.isDirectory()) {
-            for (File child : file.listFiles()) {
-                deleteRecursively(child);
-            }
-        }
-        file.delete();
     }
 
     @FunctionalInterface

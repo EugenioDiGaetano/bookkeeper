@@ -219,6 +219,7 @@
     <otel.version>1.26.0</otel.version>
     <UBUNTU_MIRROR>http://archive.ubuntu.com/ubuntu/</UBUNTU_MIRROR>
     <UBUNTU_SECURITY_MIRROR>http://security.ubuntu.com/ubuntu/</UBUNTU_SECURITY_MIRROR>
+    <maven-failsafe-plugin.version>3.1.0</maven-failsafe-plugin.version>
   </properties>
 
   <!-- dependency definitions -->
@@ -890,7 +891,22 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>${maven-surefire-plugin.version}</version>
+          <version>${maven-failsafe-plugin.version}</version>
+          <configuration>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <printSummary>true</printSummary>
+            <useSystemClassLoader>false</useSystemClassLoader>
+          </configuration>
+          <executions>
+            <execution>
+              <id>run-tests</id>
+              <phase>integration-test</phase>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>com.github.maven-nar</groupId>

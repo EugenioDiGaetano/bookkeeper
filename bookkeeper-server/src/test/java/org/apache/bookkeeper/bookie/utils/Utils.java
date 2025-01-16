@@ -3,6 +3,7 @@ package org.apache.bookkeeper.bookie.utils;
 import io.netty.buffer.ByteBuf;
 import org.junit.Assert;
 
+import java.io.File;
 import java.util.Random;
 
 public class Utils {
@@ -22,6 +23,18 @@ public class Utils {
         Assert.assertArrayEquals("I dati scritti non corrispondono a quelli attesi.",
                 expectedWrittenData,
                 actualWrittenData);
+    }
+
+    public static void deleteRecursively(File file) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                deleteRecursively(child);
+            }
+        }
+        file.delete();
     }
 
 }
