@@ -1,4 +1,4 @@
-name: jacoco
+name: Jacoco
 on:
   push:
     branches:
